@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Nebula-work/docker-web/internal/api"
 	"github.com/Nebula-work/docker-web/internal/docker"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -16,7 +17,7 @@ import (
 
 func main() {
 	// create real docker client wrapper
-	_, err := docker.NewClientFromEnv()
+	dCli, err := docker.NewClientFromEnv()
 	if err != nil {
 		log.Fatalf("failed to create docker client: %v", err)
 	}
@@ -36,6 +37,13 @@ func main() {
 	cfg.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
 	cfg.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
 	r.Use(cors.New(cfg))
+	apiGroup := r.Group("/api/v1")
+	{
+		// middleware: max body size 8MB, request timeout 30s
+		apiGroup.Use(api.MaxBodySize(8 << 20))
+		apiGroup.Use(api.RequestTimeout(30 * time.Second))
+		api.RegisterRoutes(apiGroup, dCli)
+	}
 
 	// HTTP server with timeouts
 	srv := &http.Server{

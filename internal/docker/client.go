@@ -5,11 +5,11 @@ import (
 	"io"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/build"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
-	"github.com/docker/docker/api/types/volume"
-	"github.com/docker/docker/api/types/build"
 	"github.com/docker/docker/api/types/network"
+	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
 )
 
@@ -19,6 +19,7 @@ type DockerAPI interface {
 	ContainerStart(ctx context.Context, containerID string, options container.StartOptions) error
 	ContainerStop(ctx context.Context, containerID string, options container.StopOptions) error
 	ContainerRemove(ctx context.Context, containerID string, options container.RemoveOptions) error
+	ContainerRestart(ctx context.Context, containerID string, options container.StopOptions) error
 	ContainerLogs(ctx context.Context, containerID string, options container.LogsOptions) (io.ReadCloser, error)
 	ImageList(ctx context.Context, options image.ListOptions) ([]image.Summary, error)
 	ImagePull(ctx context.Context, ref string, options image.PullOptions) (io.ReadCloser, error)
@@ -33,21 +34,23 @@ type DockerAPI interface {
 }
 
 // clientWrapper wraps the real docker client
-type clientWrapper struct{
+type clientWrapper struct {
 	cli *client.Client
 }
 
 func NewClientFromEnv() (DockerAPI, error) {
 	c, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil { return nil, err }
-	return &clientWrapper{cli:c}, nil
+	if err != nil {
+		return nil, err
+	}
+	return &clientWrapper{cli: c}, nil
 }
 
 // Implement the interface by delegating to cli
 func (w *clientWrapper) ContainerList(ctx context.Context, options container.ListOptions) ([]types.Container, error) {
 	return w.cli.ContainerList(ctx, options)
 }
-func (w *clientWrapper) ContainerStart(ctx context.Context, containerID string,  options container.StartOptions) error {
+func (w *clientWrapper) ContainerStart(ctx context.Context, containerID string, options container.StartOptions) error {
 	return w.cli.ContainerStart(ctx, containerID, options)
 }
 func (w *clientWrapper) ContainerStop(ctx context.Context, containerID string, options container.StopOptions) error {
@@ -55,6 +58,9 @@ func (w *clientWrapper) ContainerStop(ctx context.Context, containerID string, o
 }
 func (w *clientWrapper) ContainerRemove(ctx context.Context, containerID string, options container.RemoveOptions) error {
 	return w.cli.ContainerRemove(ctx, containerID, options)
+}
+func (w *clientWrapper) ContainerRestart(ctx context.Context, containerID string, options container.StopOptions) error {
+	return w.cli.ContainerRestart(ctx, containerID, options)
 }
 func (w *clientWrapper) ContainerLogs(ctx context.Context, containerID string, options container.LogsOptions) (io.ReadCloser, error) {
 	return w.cli.ContainerLogs(ctx, containerID, options)
@@ -83,7 +89,7 @@ func (w *clientWrapper) VolumeRemove(ctx context.Context, volumeID string, force
 func (w *clientWrapper) NetworkList(ctx context.Context, options network.ListOptions) ([]network.Summary, error) {
 	return w.cli.NetworkList(ctx, options)
 }
-func (w *clientWrapper) NetworkCreate(ctx context.Context, name string, options network.CreateOptions) (network.CreateResponse, error){
+func (w *clientWrapper) NetworkCreate(ctx context.Context, name string, options network.CreateOptions) (network.CreateResponse, error) {
 	return w.cli.NetworkCreate(ctx, name, options)
 }
 func (w *clientWrapper) NetworkRemove(ctx context.Context, networkID string) error {
