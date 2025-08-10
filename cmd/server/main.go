@@ -11,11 +11,15 @@ import (
 
 	"github.com/Nebula-work/docker-web/internal/api"
 	"github.com/Nebula-work/docker-web/internal/docker"
+	"github.com/Nebula-work/docker-web/internal/utils"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	if err := utils.CheckDockerAvailability(); err != nil {
+		log.Fatalf("docker check failed: %v", err)
+	}
 	// create real docker client wrapper
 	dCli, err := docker.NewClientFromEnv()
 	if err != nil {

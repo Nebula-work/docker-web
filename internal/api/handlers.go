@@ -29,10 +29,12 @@ func ListContainers(c *gin.Context, cli docker.DockerAPI) {
 	ctx := c.Request.Context()
 	containers, err := cli.ContainerList(ctx, container.ListOptions{All: true})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list containers"})
+		writeAPIError(c, http.StatusInternalServerError,
+			"Failed to list containers",
+			err.Error(),
+		)
 		return
 	}
-
 	c.JSON(http.StatusOK, containers)
 }
 
