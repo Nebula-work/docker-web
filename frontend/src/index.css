@@ -2,77 +2,196 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here.
 All colors MUST be HSL.
 */
 
 @layer base {
-  :root {
-    /* Docker Desktop Dark Theme */
-    --background: 218 23% 6%;
-    --foreground: 210 40% 98%;
+    :root {
+        /* Docker Desktop Dark Theme */
+        --background: 218 23% 6%;
+        --foreground: 210 40% 98%;
 
-    --card: 220 24% 8%;
-    --card-foreground: 210 40% 98%;
+        --card: 220 24% 8%;
+        --card-foreground: 210 40% 98%;
 
-    --popover: 220 24% 8%;
-    --popover-foreground: 210 40% 98%;
+        --popover: 220 24% 8%;
+        --popover-foreground: 210 40% 98%;
 
-    /* Docker Blue Primary */
-    --primary: 195 95% 50%;
-    --primary-foreground: 220 24% 8%;
+        /* Docker Blue Primary */
+        --primary: 195 95% 50%;
+        --primary-foreground: 220 24% 8%;
 
-    --secondary: 218 20% 12%;
-    --secondary-foreground: 210 40% 85%;
+        --secondary: 218 20% 12%;
+        --secondary-foreground: 210 40% 85%;
 
-    --muted: 218 20% 12%;
-    --muted-foreground: 215 20% 65%;
+        --muted: 218 20% 12%;
+        --muted-foreground: 215 20% 65%;
 
-    --accent: 195 95% 50%;
-    --accent-foreground: 220 24% 8%;
+        --accent: 195 95% 50%;
+        --accent-foreground: 220 24% 8%;
 
-    --destructive: 0 72% 56%;
-    --destructive-foreground: 210 40% 98%;
+        --destructive: 0 72% 56%;
+        --destructive-foreground: 210 40% 98%;
 
-    --success: 120 60% 50%;
-    --success-foreground: 210 40% 98%;
+        --success: 120 60% 50%;
+        --success-foreground: 210 40% 98%;
 
-    --warning: 45 90% 55%;
-    --warning-foreground: 220 24% 8%;
+        --warning: 45 90% 55%;
+        --warning-foreground: 220 24% 8%;
 
-    --border: 218 20% 18%;
-    --input: 218 20% 12%;
-    --ring: 195 95% 50%;
+        --border: 218 20% 18%;
+        --input: 218 20% 12%;
+        --ring: 195 95% 50%;
 
-    --radius: 0.5rem;
+        --radius: 0.5rem;
 
-    /* Sidebar theming */
-    --sidebar-background: 218 25% 7%;
-    --sidebar-foreground: 210 40% 85%;
-    --sidebar-primary: 195 95% 50%;
-    --sidebar-primary-foreground: 220 24% 8%;
-    --sidebar-accent: 218 20% 12%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 218 20% 15%;
-    --sidebar-ring: 195 95% 50%;
+        /* Sidebar theming */
+        --sidebar-background: 218 25% 7%;
+        --sidebar-foreground: 210 40% 85%;
+        --sidebar-primary: 195 95% 50%;
+        --sidebar-primary-foreground: 220 24% 8%;
+        --sidebar-accent: 218 20% 12%;
+        --sidebar-accent-foreground: 210 40% 98%;
+        --sidebar-border: 218 20% 15%;
+        --sidebar-ring: 195 95% 50%;
 
-    /* Custom gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(195 95% 50%), hsl(195 95% 65%));
-    --gradient-card: linear-gradient(135deg, hsl(220 24% 8%), hsl(218 23% 9%));
-    
-    /* Status colors */
-    --status-running: 120 60% 50%;
-    --status-stopped: 0 0% 60%;
-    --status-error: 0 72% 56%;
-  }
+        /* Custom gradients */
+        --gradient-primary: linear-gradient(135deg, hsl(195 95% 50%), hsl(195 95% 65%));
+        --gradient-card: linear-gradient(135deg, hsl(220 24% 8%), hsl(218 23% 9%));
+        --gradient-card-hover: linear-gradient(135deg, hsl(220 24% 10%), hsl(218 23% 11%));
+
+        /* 3D Card shadows and effects */
+        --shadow-3d:
+                0 4px 8px -2px hsl(218 27% 4% / 0.3),
+                0 8px 16px -4px hsl(218 27% 4% / 0.2),
+                0 12px 24px -6px hsl(218 27% 4% / 0.1);
+        --shadow-3d-hover:
+                0 8px 16px -2px hsl(218 27% 4% / 0.4),
+                0 16px 32px -4px hsl(218 27% 4% / 0.25),
+                0 24px 48px -8px hsl(218 27% 4% / 0.15);
+        --shadow-3d-pressed:
+                0 2px 4px -1px hsl(218 27% 4% / 0.4),
+                0 4px 8px -2px hsl(218 27% 4% / 0.3);
+
+        /* Status colors */
+        --status-running: 120 60% 50%;
+        --status-stopped: 0 0% 60%;
+        --status-error: 0 72% 56%;
+    }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+    * {
+        @apply border-border;
+    }
 
-  body {
-    @apply bg-background text-foreground;
-  }
+    body {
+        @apply bg-background text-foreground;
+    }
+
+    /* Force dark theme for Mantine components */
+    [data-mantine-color-scheme="dark"] {
+        --mantine-color-body: hsl(218, 23%, 6%);
+        --mantine-color-text: hsl(210, 40%, 98%);
+        --mantine-color-white: hsl(220, 24%, 8%);
+        --mantine-color-black: hsl(210, 40%, 98%);
+        --mantine-color-dark-0: hsl(210, 40%, 98%);
+        --mantine-color-dark-1: hsl(215, 20%, 65%);
+        --mantine-color-dark-2: hsl(218, 20%, 18%);
+        --mantine-color-dark-3: hsl(218, 20%, 15%);
+        --mantine-color-dark-4: hsl(218, 20%, 12%);
+        --mantine-color-dark-5: hsl(218, 20%, 10%);
+        --mantine-color-dark-6: hsl(220, 24%, 8%);
+        --mantine-color-dark-7: hsl(218, 23%, 6%);
+        --mantine-color-dark-8: hsl(218, 25%, 5%);
+        --mantine-color-dark-9: hsl(218, 27%, 4%);
+    }
+
+    /* 3D Card Styles */
+    .card-3d {
+        background: var(--gradient-card);
+        border: 1px solid hsl(var(--border));
+        box-shadow: var(--shadow-3d);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .card-3d::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg,
+        transparent,
+        hsl(var(--primary) / 0.3),
+        transparent
+        );
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .card-3d:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-3d-hover);
+        background: var(--gradient-card-hover);
+    }
+
+    .card-3d:hover::before {
+        opacity: 1;
+    }
+
+    .card-3d:active {
+        transform: translateY(0);
+        box-shadow: var(--shadow-3d-pressed);
+    }
+
+    .card-3d-sm {
+        background: var(--gradient-card);
+        border: 1px solid hsl(var(--border));
+        box-shadow:
+                0 2px 4px -1px hsl(218 27% 4% / 0.2),
+                0 4px 8px -2px hsl(218 27% 4% / 0.15);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .card-3d-sm:hover {
+        transform: translateY(-1px);
+        box-shadow:
+                0 4px 8px -1px hsl(218 27% 4% / 0.25),
+                0 8px 16px -2px hsl(218 27% 4% / 0.2);
+    }
+
+    /* Override any white backgrounds in Mantine components */
+    .mantine-Paper-root,
+    .mantine-Modal-content,
+    .mantine-Popover-dropdown,
+    .mantine-Select-dropdown,
+    .mantine-Menu-dropdown {
+        background-color: hsl(220, 24%, 8%) !important;
+        color: hsl(210, 40%, 98%) !important;
+        border-color: hsl(218, 20%, 18%) !important;
+    }
+
+    .mantine-TextInput-input,
+    .mantine-Select-input,
+    .mantine-NumberInput-input {
+        background-color: hsl(218, 20%, 12%) !important;
+        color: hsl(210, 40%, 98%) !important;
+        border-color: hsl(218, 20%, 18%) !important;
+    }
+
+    .mantine-Button-root[data-variant="filled"] {
+        background-color: hsl(195, 95%, 50%) !important;
+        color: hsl(220, 24%, 8%) !important;
+    }
+
+    .mantine-Button-root[data-variant="outline"] {
+        background-color: transparent !important;
+        color: hsl(210, 40%, 98%) !important;
+        border-color: hsl(218, 20%, 18%) !important;
+    }
 }

@@ -35,7 +35,7 @@ func main() {
 	cfg := cors.DefaultConfig()
 	origin := os.Getenv("UI_ORIGIN")
 	if origin == "" {
-		origin = "http://localhost:3000"
+		origin = "http://localhost:8081"
 	}
 	cfg.AllowOrigins = []string{origin}
 	cfg.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
@@ -51,7 +51,7 @@ func main() {
 
 	// HTTP server with timeouts
 	srv := &http.Server{
-		Addr:         ":8080",
+		Addr:         ":9000",
 		Handler:      r,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 0, // streaming endpoints may need longer writes; per-route timeouts applied
@@ -60,7 +60,7 @@ func main() {
 
 	// start server
 	go func() {
-		log.Println("server starting on :8080")
+		log.Println("server starting on :9000")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("listen: %v", err)
 		}
