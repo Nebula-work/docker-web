@@ -35,7 +35,7 @@ func main() {
 	cfg := cors.DefaultConfig()
 	origin := os.Getenv("UI_ORIGIN")
 	if origin == "" {
-		origin = "http://localhost:8081"
+		origin = "http://localhost:8080"
 	}
 	cfg.AllowOrigins = []string{origin}
 	cfg.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
