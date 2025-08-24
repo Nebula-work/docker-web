@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Paper, Text, Button, TextInput, Group, Stack, Badge, Menu } from "@mantine/core";
 import { StatusBadge } from "@/components/StatusBadge";
 import { RunContainerModal } from "@/components/modals/RunContainerModal";
@@ -12,91 +12,67 @@ import {
     Search,
     Filter
 } from "lucide-react";
+import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
+import {DockerPort, fetchContainers} from "@/store/slices/containersSlice";
+import {ContainerActionModal} from "@/components/modals/ContainerActionModal.tsx";
 
 export default function Containers() {
+    const dispatch = useAppDispatch();
+    const {containers,loading,error} = useAppSelector(state => state.containers);
+    console.log(containers);
     const [searchTerm, setSearchTerm] = useState("");
     const [runContainerOpen, setRunContainerOpen] = useState(false);
 
-    const containers = [
-        {
-            id: "c1",
-            name: "nginx-proxy",
-            image: "nginx:latest",
-            status: "running" as const,
-            ports: "80:80, 443:443",
-            created: "2 hours ago",
-            size: "142 MB",
-            cpu: "0.1%",
-            memory: "45 MB / 512 MB"
-        },
-        {
-            id: "c2",
-            name: "postgres-db",
-            image: "postgres:15",
-            status: "running" as const,
-            ports: "5432:5432",
-            created: "1 day ago",
-            size: "374 MB",
-            cpu: "2.3%",
-            memory: "180 MB / 1 GB"
-        },
-        {
-            id: "c3",
-            name: "redis-session",
-            image: "redis:7",
-            status: "stopped" as const,
-            ports: "6379:6379",
-            created: "3 days ago",
-            size: "117 MB",
-            cpu: "-",
-            memory: "-"
-        },
-        {
-            id: "c4",
-            name: "node-api",
-            image: "node:18",
-            status: "running" as const,
-            ports: "3000:3000",
-            created: "1 hour ago",
-            size: "256 MB",
-            cpu: "5.2%",
-            memory: "320 MB / 512 MB"
-        },
-        {
-            id: "c5",
-            name: "mongodb",
-            image: "mongo:6",
-            status: "exited" as const,
-            ports: "27017:27017",
-            created: "5 days ago",
-            size: "448 MB",
-            cpu: "-",
-            memory: "-"
-        },
-        {
-            id: "c6",
-            name: "elasticsearch",
-            image: "elasticsearch:8",
-            status: "error" as const,
-            ports: "9200:9200",
-            created: "2 days ago",
-            size: "892 MB",
-            cpu: "-",
-            memory: "-"
-        }
-    ];
+    const [actionModal, setActionModal] = useState<{
+        open: boolean;
+        container: any;
+        action: 'start' | 'stop';
+    }>({
+        open: false,
+        container: null,
+        action: 'start'
+    });
+    useEffect(() => {
+        dispatch(fetchContainers());
+    }, [dispatch]);
+
+    const formatPorts = (ports: DockerPort[] | undefined) => {
+        if (!ports || ports.length === 0) return [] as string[];
+        // Group by PublicPort-PrivatePort-Type to deduplicate IPv4/IPv6 duplicates
+        const grouped = new Map<string, DockerPort[]>();
+        ports.forEach((p) => {
+            const key = `${p?.PublicPort ?? ''}-${p?.PrivatePort ?? ''}-${p?.Type ?? ''}`;
+            const arr = grouped.get(key) ?? [];
+            arr.push(p);
+            grouped.set(key, arr);
+        });
+        const result: string[] = [];
+        grouped.forEach((list) => {
+            // prefer IPv4 (0.0.0.0) over IPv6 (::) if both exist
+            const chosen = list.find(p => p?.IP && p.IP !== '::') ?? list[0];
+            const hasPublic = chosen?.PublicPort != null;
+            const proto = chosen?.Type || 'tcp';
+            if (hasPublic) {
+                const ipPart = chosen?.IP ? `${chosen.IP}:` : '';
+                result.push(`${ipPart}${chosen.PublicPort}->${chosen?.PrivatePort}/${proto}`);
+            } else {
+                result.push(`${chosen?.PrivatePort}/${proto}`);
+            }
+        });
+        return result;
+    };
 
     const filteredContainers = containers.filter(container =>
-        container.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        container.image.toLowerCase().includes(searchTerm.toLowerCase())
+        container.Names?.some(name => name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        container.Image?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const stats = {
         total: containers.length,
-        running: containers.filter(c => c.status === "running").length,
-        stopped: containers.filter(c => c.status === "stopped").length,
-        exited: containers.filter(c => c.status === "exited").length,
-        error: containers.filter(c => c.status === "error").length,
+        running: containers.filter(c => c.State === "running").length,
+        stopped: containers.filter(c => c.State === "stopped").length,
+        exited: containers.filter(c => c.State === "exited").length,
+        error: containers.filter(c => c.State === "error").length,
     };
 
     return (
@@ -115,24 +91,25 @@ export default function Containers() {
             </div>
 
             {/* Stats */}
+            // TODO:replace with mantine Gird
             <div className="grid gap-4 md:grid-cols-5">
-                <Paper p="md" withBorder>
+                <Paper p="md" className="card-3d">
                     <Text size="xl" fw={700}>{stats.total}</Text>
                     <Text size="xs" c="dimmed">Total</Text>
                 </Paper>
-                <Paper p="md" withBorder>
+                <Paper p="md" className="card-3d">
                     <Text size="xl" fw={700} c="green">{stats.running}</Text>
                     <Text size="xs" c="dimmed">Running</Text>
                 </Paper>
-                <Paper p="md" withBorder>
+                <Paper p="md" className="card-3d">
                     <Text size="xl" fw={700} c="yellow">{stats.stopped}</Text>
                     <Text size="xs" c="dimmed">Stopped</Text>
                 </Paper>
-                <Paper p="md" withBorder>
+                <Paper p="md" className="card-3d">
                     <Text size="xl" fw={700} c="dimmed">{stats.exited}</Text>
                     <Text size="xs" c="dimmed">Exited</Text>
                 </Paper>
-                <Paper p="md" withBorder>
+                <Paper p="md" className="card-3d">
                     <Text size="xl" fw={700} c="red">{stats.error}</Text>
                     <Text size="xs" c="dimmed">Error</Text>
                 </Paper>
@@ -154,7 +131,7 @@ export default function Containers() {
             </Group>
 
             {/* Containers List */}
-            <Paper p="md" withBorder>
+            <Paper p="md" className="card-3d">
                 <Stack gap="md">
                     <div>
                         <Text fw={500}>All Containers</Text>
@@ -165,50 +142,74 @@ export default function Containers() {
                     <Stack gap="md">
                         {filteredContainers.map((container) => (
                             <Paper
-                                key={container.id}
+                                key={container.Id}
                                 p="md"
-                                withBorder
-                                className="hover:bg-accent/50 transition-colors"
+
+                                className="hover:bg-accent/50 transition-colors card-3d"
                             >
                                 <Group justify="space-between">
                                     <Group gap="md" style={{ flex: 1 }}>
                                         <Container className="h-8 w-8 text-muted-foreground flex-shrink-0" />
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                             <Group gap="sm" mb="xs">
-                                                <Text fw={500} truncate>{container.name}</Text>
-                                                <StatusBadge status={container.status} />
+                                                <Text fw={500} truncate>{container.Names}</Text>
+                                                <StatusBadge status={container.State} />
                                             </Group>
-                                            <Text size="sm" c="dimmed" truncate>{container.image}</Text>
-                                            <Text size="xs" c="dimmed">Created {container.created}</Text>
+                                            <Text size="sm" c="dimmed" truncate>{container.Image}</Text>
+                                            <Text size="xs" c="dimmed">Created {new Date(container.Created).toLocaleDateString()}</Text>
                                         </div>
                                     </Group>
 
                                     <Group gap="lg" className="hidden md:flex">
-                                        <div className="text-right">
-                                            <Text size="sm" fw={500}>{container.ports}</Text>
+                                        <div className="text-right max-w-[320px]">
+                                            <Group gap="xs" justify="flex-end" wrap="wrap">
+                                                {formatPorts(container.Ports)?.length === 0 ? (
+                                                    <Text size="sm" fw={500}>—</Text>
+                                                ) : (
+                                                    formatPorts(container.Ports).map((p, idx) => (
+                                                        <Badge key={idx} variant="light" size="sm">{p}</Badge>
+                                                    ))
+                                                )}
+                                            </Group>
                                             <Text size="xs" c="dimmed">Ports</Text>
                                         </div>
-                                        <div className="text-right">
-                                            <Text size="sm" fw={500}>{container.cpu}</Text>
-                                            <Text size="xs" c="dimmed">CPU</Text>
-                                        </div>
-                                        <div className="text-right">
-                                            <Text size="sm" fw={500}>{container.memory}</Text>
-                                            <Text size="xs" c="dimmed">Memory</Text>
-                                        </div>
-                                        <div className="text-right">
-                                            <Text size="sm" fw={500}>{container.size}</Text>
-                                            <Text size="xs" c="dimmed">Size</Text>
-                                        </div>
+                                        {/*<div className="text-right">*/}
+                                        {/*    <Text size="sm" fw={500}>{container.cpu}</Text>*/}
+                                        {/*    <Text size="xs" c="dimmed">CPU</Text>*/}
+                                        {/*</div>*/}
+                                        {/*<div className="text-right">*/}
+                                        {/*    <Text size="sm" fw={500}>{container.memory}</Text>*/}
+                                        {/*    <Text size="xs" c="dimmed">Memory</Text>*/}
+                                        {/*</div>*/}
+                                        {/*<div className="text-right">*/}
+                                        {/*    <Text size="sm" fw={500}>{container.size}</Text>*/}
+                                        {/*    <Text size="xs" c="dimmed">Size</Text>*/}
+                                        {/*</div>*/}
                                     </Group>
 
                                     <Group gap="xs" className="flex-shrink-0">
-                                        {container.status === "running" ? (
-                                            <Button variant="subtle" size="compact-sm">
+                                        {container.State === "running" ? (
+                                            <Button
+                                                variant="subtle"
+                                                size="compact-sm"
+                                                onClick={() => setActionModal({
+                                                    open: true,
+                                                    container,
+                                                    action: 'stop'
+                                                })}
+                                            >
                                                 <Square className="h-4 w-4" />
                                             </Button>
                                         ) : (
-                                            <Button variant="subtle" size="compact-sm">
+                                            <Button
+                                                variant="subtle"
+                                                size="compact-sm"
+                                                onClick={() => setActionModal({
+                                                    open: true,
+                                                    container,
+                                                    action: 'start'
+                                                })}
+                                            >
                                                 <Play className="h-4 w-4" />
                                             </Button>
                                         )}
@@ -223,7 +224,7 @@ export default function Containers() {
                                                     <MoreHorizontal className="h-4 w-4" />
                                                 </Button>
                                             </Menu.Target>
-                                            <Menu.Dropdown>
+                                            <Menu.Dropdown className={"card-3d"}>
                                                 <Menu.Label>Actions</Menu.Label>
                                                 <Menu.Item>View logs</Menu.Item>
                                                 <Menu.Item>Inspect</Menu.Item>
@@ -243,6 +244,12 @@ export default function Containers() {
             </Paper>
 
             <RunContainerModal open={runContainerOpen} onOpenChange={setRunContainerOpen} />
+            <ContainerActionModal
+                open={actionModal.open}
+                onOpenChange={(open) => setActionModal(prev => ({ ...prev, open }))}
+                container={actionModal.container}
+                action={actionModal.action}
+            />
         </div>
     );
 }

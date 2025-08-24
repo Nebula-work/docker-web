@@ -6,6 +6,7 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
+    console.log("StatusBadge status:", status);
     const statusConfig = {
         running: {
             label: "Running",

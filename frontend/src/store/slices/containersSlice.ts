@@ -1,13 +1,20 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import {getContainers} from "@/api/container/containerService.ts";
+import {getContainers, startContainer, stopContainer} from "@/api/container/containerService.ts";
+
+export interface DockerPort {
+    IP?: string;
+    PrivatePort?: number;
+    PublicPort?: number;
+    Type?: string;
+}
 
 export interface Container {
-    id: string;
-    name: string;
-    image: string;
-    status: 'running' | 'stopped' | 'error';
-    ports: string[];
-    created: string;
+    Id: string;
+    Names: string[];
+    Image: string;
+    State: string; // Docker returns states like running, exited, etc.
+    Ports: DockerPort[];
+    Created: number | string;
 }
 
 interface ContainersState {
@@ -22,6 +29,20 @@ const initialState: ContainersState = {
     error: null,
 };
 
+export const stopContainerThunk = createAsyncThunk(
+    'containers/stopContainer',
+    async (containerId: string) => {
+        console.log("Stopping container with ID:", containerId);
+        return await stopContainer(containerId);
+    }
+);
+export const startContainerThunk = createAsyncThunk(
+    'containers/startContainer',
+    async (containerId: string) => {
+        console.log("Starting container with ID:", containerId);
+        return await startContainer(containerId);
+    }
+);
 export const fetchContainers = createAsyncThunk(
     'containers/fetchContainers',
     async () => {
